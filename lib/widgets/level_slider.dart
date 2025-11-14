@@ -27,13 +27,37 @@ class _LevelSliderState extends State<LevelSlider> {
   @override
   void initState() {
     super.initState();
-    _values = const RangeValues(7, 10); 
+    if (widget.initialValue != null && widget.initialValue!.isNotEmpty) {
+      _values = _parseLevel(widget.initialValue!);
+    } else {
+      _values = const RangeValues(3, 3);
+    }
+  }
+
+  RangeValues _parseLevel(String level) {
+    final parts = level.split(' ');
+    if (parts.length < 2) return const RangeValues(9, 9);
+
+    String strengthStr = parts[0].toLowerCase();
+    String levelStr = parts.sublist(1).join(' ').toLowerCase();
+
+    int strengthIndex = strengths.indexWhere((s) => s.toLowerCase() == strengthStr);
+    int levelIndex = levels.indexWhere((l) => l.toLowerCase() == levelStr);
+
+    if (strengthIndex == -1 || levelIndex == -1) return const RangeValues(9, 9);
+
+    double position = (levelIndex * strengths.length + strengthIndex).toDouble();
+    return RangeValues(position, position);
   }
 
   String _getLabel(double value) {
-    int index = value.round();
-    int levelIndex = index ~/ 3;
-    int strengthIndex = index % 3;
+    int positionIndex = value.round();
+    int levelIndex = positionIndex ~/ strengths.length;
+    int strengthIndex = positionIndex % strengths.length;
+    
+    if (levelIndex >= levels.length) levelIndex = levels.length - 1;
+    if (strengthIndex >= strengths.length) strengthIndex = strengths.length - 1;
+    
     return "${strengths[strengthIndex]} ${levels[levelIndex]}";
   }
 
@@ -44,11 +68,6 @@ class _LevelSliderState extends State<LevelSlider> {
     }
 
     int totalDivisions = (levels.length * strengths.length) - 1;
-    String startLabel = _getLabel(_values!.start);
-    String endLabel = _getLabel(_values!.end);
-
-   
-    String displayLabel = "$startLabel, $endLabel";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,35 +88,59 @@ class _LevelSliderState extends State<LevelSlider> {
             min: 0,
             max: totalDivisions.toDouble(),
             onChanged: (val) {
-              setState(() => _values = val);
-              widget.onChanged(displayLabel);
+              setState(() {
+                _values = val;
+                String startLabel = _getLabel(_values!.start);
+                String endLabel = _getLabel(_values!.end);
+                String updatedLabel = (_values!.start == _values!.end) 
+                    ? startLabel 
+                    : "$startLabel - $endLabel";
+                widget.onChanged(updatedLabel);
+              });
             },
           ),
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(levels.length, (i) {
-            return Column(
-              children: [
-                Row(
-                  children: strengths
-                      .map((s) => Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 3),
-                            child: Text(
-                              s[0], 
-                              style: const TextStyle(
-                                  fontSize: 10, color: Colors.grey),
-                            ),
-                          ))
-                      .toList(),
-                ),
-                Text(levels[i],
-                    style: const TextStyle(
+          children: List.generate(levels.length, (levelIdx) {
+            return Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(strengths.length, (strengthIdx) {
+                      int positionIndex = levelIdx * strengths.length + strengthIdx;
+                      
+                      int startPos = _values!.start.round();
+                      int endPos = _values!.end.round();
+                      
+                      bool isThumbHere = (positionIndex == startPos || positionIndex == endPos);
+                      
+                      return Text(
+                        strengths[strengthIdx][0].toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isThumbHere ? Colors.blue : Colors.grey.shade400,
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    child: Text(
+                      levels[levelIdx],
+                      style: const TextStyle(
                         fontSize: 11,
                         color: Colors.black87,
-                        fontWeight: FontWeight.w600)),
-              ],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           }),
         ),

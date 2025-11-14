@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/player_list_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() {
   runApp(BadmintonApp());
@@ -12,7 +12,7 @@ class BadmintonApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Badminton Queue',
       theme: ThemeData(primarySwatch: Colors.green),
-      home: PlayerListScreen(),
+      home: const HomeScreen(),
     );
   }
 }

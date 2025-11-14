@@ -210,7 +210,10 @@ class _EditPlayerScreenState extends State<EditPlayerScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                LevelSlider(onChanged: (level) => setState(() => _level = level)),
+                LevelSlider(
+                  initialValue: _level,
+                  onChanged: (level) => setState(() => _level = level),
+                ),
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
