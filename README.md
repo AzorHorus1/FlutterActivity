@@ -1,4 +1,4 @@
-# badminton_player_app
+# badminton_queue_app
 
 A new Flutter project.
 
